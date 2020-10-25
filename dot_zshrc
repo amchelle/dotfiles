@@ -40,6 +40,7 @@ alias s='screen '
 alias sudo='sudo '
 alias ssh='ssh -t '
 alias gst='git status '
+alias c='chezmoi '
 
 mc() {
     mkdir -p -- "$1" &&
