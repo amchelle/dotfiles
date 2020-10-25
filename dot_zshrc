@@ -41,6 +41,7 @@ alias sudo='sudo '
 alias ssh='ssh -t '
 alias gst='git status '
 alias c='chezmoi '
+alias fd='fdfind '
 
 mc() {
     mkdir -p -- "$1" &&
