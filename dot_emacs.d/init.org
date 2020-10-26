@@ -640,7 +640,6 @@ location
     (use-package web-mode
       :ensure t
       :pin melpa-stable
-      :after (tide)
       :config
       (add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
       (setq web-mode-enable-auto-quoting nil)
