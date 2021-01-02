@@ -132,7 +132,7 @@ Favored font of late
     (when (font-exists-p esc-font)
       (set-face-attribute 'default nil
                           :font esc-font
-                          :height 95
+                          :height 110
                           :weight 'normal
                           :width 'normal)))
 #+END_SRC
@@ -350,8 +350,9 @@ location
             ("PLAN" :foreground "purple" :weight bold)
             ("MEETING" :foreground "blue" :weight bold))))
 #+END_SRC
-*** Dired config
-   #+BEGIN_SRC emacs-lisp
+*** Dired
+Stale block completely tied to the deprecated dired-details
+   #+BEGIN_SRC emacs-lisp :tangle no
      (use-package dired-details :ensure t
        :config (dired-details-install)
        :init
@@ -449,6 +450,85 @@ location
              (end-of-buffer)
              (dired-next-line -1)))))
    #+END_SRC
+   **** dired-details
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package dired-details
+    :ensure t
+    :after (dash dired)
+    :config (dired-details-install))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-details
+    :quelpa (dired-details
+             :fetcher github
+             :repo "emacsmirror/dired-details")
+    :after (dash dired)
+    :config (dired-details-install))
+#+END_SRC
+
+**** dired-x
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-x
+    :after (dired)
+    :init (setq dired-omit-verbose nil)
+    :config
+    (setq-default dired-omit-files-p t)
+    (setq dired-omit-files
+          (concat dired-omit-files
+                  "\\|\\.pyc$"
+                  "\\|\\.elc$"
+                  "\\|\\.~undo-tree~\\.gz$"
+                  "\\|\\.projectile$"
+                  "\\|\\.DS_Store$")
+          dired-guess-shell-alist-user
+          '(("\\.mp4$" "cvlc" "mplayer")
+            ("\\.avi$" "cvlc" "mplayer")
+            ("\\.mkv$" "cvlc" "mplayer")
+            ;; ("\\.pdf$" "evince" "zathura")
+            ("\\.tar.bz2" "dtrx -n --one=here" "tar jxvf")
+            ("\\.tar.gz" "dtrx -n --one=here" "tar xzvf")
+            ("\\.rar" "dtrx -n --one=here" "unrar e")
+            ("\\.zip" "dtrx -n --one=here")
+            ;; ("\\.*$" "xdg-open")
+            ("\\.*$" "open"))))
+#+END_SRC
+
+**** dired-aux
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-aux
+    :after (dired)
+    :config (add-to-list 'dired-compress-file-suffixes '("\\.zip$" "unzip")))
+#+END_SRC
+
+**** dired-smart-jump
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-smart-jump
+    :quelpa (dired-smart-jump
+             :fetcher github
+             :repo "ericcrosson/dired-smart-jump")
+    :after (dired))
+#+END_SRC
+
+**** dired-here
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-here
+    :quelpa (dired-here
+             :fetcher github
+             :repo "EricCrosson/dired-here")
+    :after (dired evil-leader)
+    :config (evil-leader/set-key "d" 'dired-here))
+#+END_SRC
+
+**** dired-arrow-keys
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-arrow-keys
+    :quelpa (dired-arrow-keys
+             :fetcher github
+             :repo "EricCrosson/dired-arrow-keys")
+    :after (dired evil)
+    :config (dired-arrow-keys-install))
+#+END_SRC
+
 *** Diminish config
    #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package diminish :ensure t
@@ -597,22 +677,22 @@ location
     :config
 
     ;; Specifically for host jerry
-    (defun kill-tide-buffers-when-less-than-1gb-swap ()
-      (when (< (string-to-number
-                (shell-command-to-string "grep Swap /proc/meminfo | tail -n1 | awk '{print $2}'"))
-               1000000
-               )
-        (message "Swap is low, killing all tide-servers")
-        (kill-matching-buffers "tide-server" nil t)))
-
-    (defvar idle-timer-kill-tide-buffers nil)
-
-    (defun cancel-kill-tide-buffers-when-less-than-1gb-swap ()
-      (interactive)
-      (when (not (eq idle-timer-kill-tide-buffers nil))
-        (cancel-timer idle-timer-kill-tide-buffers)
-        (setq idle-timer-kill-tide-buffers nil)))
+    ;; (defun kill-tide-buffers-when-less-than-1gb-swap ()
+    ;;   (when (< (string-to-number
+    ;;             (shell-command-to-string "grep Swap /proc/meminfo | tail -n1 | awk '{print $2}'"))
+    ;;            1000000
+    ;;            )
+    ;;     (message "Swap is low, killing all tide-servers")
+    ;;     (kill-matching-buffers "tide-server" nil t)))
     ;;
+    ;; (defvar idle-timer-kill-tide-buffers nil)
+    ;;
+    ;; (defun cancel-kill-tide-buffers-when-less-than-1gb-swap ()
+    ;;   (interactive)
+    ;;   (when (not (eq idle-timer-kill-tide-buffers nil))
+    ;;     (cancel-timer idle-timer-kill-tide-buffers)
+    ;;     (setq idle-timer-kill-tide-buffers nil)))
+    ;; ;;
 
     (flycheck-add-mode 'javascript-eslint 'typescript-mode)
     (flycheck-add-mode 'javascript-eslint 'web-mode)
@@ -625,10 +705,10 @@ location
       ;; (setq company-tooltip-align-annotations t)
 
       ;; after 5 minutes from now, and every 5 minutes after that
-      (when (eq idle-timer-kill-tide-buffers nil)
-        (setq idle-timer-kill-tide-buffers
-              (run-with-timer 300 300 'kill-tide-buffers-when-less-than-1gb-swap))
-        )
+      ;; (when (eq idle-timer-kill-tide-buffers nil)
+      ;;   (setq idle-timer-kill-tide-buffers
+      ;;         (run-with-timer 300 300 'kill-tide-buffers-when-less-than-1gb-swap))
+      ;;   )
       )
     (add-hook 'typescript-mode-hook 'tide/configure-tide-typescript)
 
@@ -640,6 +720,7 @@ location
     (use-package web-mode
       :ensure t
       :pin melpa-stable
+      :after (flycheck)
       :config
       (add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
       (setq web-mode-enable-auto-quoting nil)
@@ -660,7 +741,8 @@ location
                     (setup-tide-mode)
                     (turn-off-fci-mode))))
       ;; enable typescript-tslint checker
-      (flycheck-add-mode 'typescript-tslint 'web-mode))
+      (flycheck-add-mode 'typescript-tslint 'web-mode)
+)
 #+END_SRC
 
 *** Svelte mode config
@@ -861,42 +943,41 @@ Mark scripts executable on save.
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
     :ensure t
-    :pin melpa-stable
+    ;; :pin melpa-stable
     :bind ("C-x C-f" . counsel-find-file)
     :config
     (setq counsel-find-file-ignore-regexp
           (concat counsel-find-file-ignore-regexp
-                  "package-lock\\.json"
-                  )))
+                  "package-lock\\.json"))
+    (counsel-mode 1))
 #+END_SRC
 *** Ivy
 #+BEGIN_SRC emacs-lisp
-   (use-package ivy :ensure t
-     :diminish (ivy-mode . "")
-     :init
-     (use-package avy :ensure t)
-     (use-package counsel :ensure t)
-     :bind
-     (:map ivy-minibuffer-map
-           ("C-j" . ivy-next-line)
-           ("C-k" . ivy-previous-line)
-           ("M-i" . imenu))
-     :config
-     (ivy-mode 1)
-     ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
-     (setq ivy-use-virtual-buffers t)
-     ;; ignore undo-tree files when switching buffers
-     (add-to-list 'ivy-ignore-buffers "\\.~undo-tree~\\.gz")
-     ;; number of result lines to display
-     (setq ivy-height 10)
-     ;; does not count candidates
-     (setq ivy-count-format "")
-     ;; no regexp by default
-     (setq ivy-initial-inputs-alist nil)
-     ;; configure regexp engine.
-     (setq ivy-re-builders-alist
-           ;; allow input not in order
-           '((t   . ivy--regex-ignore-order))))
+      (use-package ivy :ensure t
+        ;; :pin melpa-stable
+        :after (counsel)
+        :diminish ivy-mode
+        :bind
+        (:map ivy-minibuffer-map
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              ("M-i" . imenu))
+        :config
+        ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
+        (setq ivy-use-virtual-buffers t)
+        ;; ignore undo-tree files when switching buffers
+        (add-to-list 'ivy-ignore-buffers "\\.~undo-tree~\\.gz")
+        ;; number of result lines to display
+        (setq ivy-height 10)
+        ;; does not count candidates
+        (setq ivy-count-format "")
+        ;; no regexp by default
+        (setq ivy-initial-inputs-alist nil)
+        ;; configure regexp engine.
+        (setq ivy-re-builders-alist
+              ;; allow input not in order
+              '((t   . ivy--regex-ignore-order)))
+        (ivy-mode 1))
 #+END_SRC
 ;; TODO: sort this incipient work into org home
 *** Which-key mode
@@ -978,8 +1059,9 @@ Mark scripts executable on save.
     #+END_SRC
 *** Projectile config
    #+BEGIN_SRC emacs-lisp
-     (use-package counsel-projectile :ensure t
-       :pin melpa-stable
+     (use-package counsel-projectile
+       :ensure t
+       ;; :pin melpa-stable
        :after (counsel)
        :bind (("C-c p f" . counsel-projectile-find-file)
               ("C-c p d" . counsel-projectile-find-dir)
@@ -989,8 +1071,9 @@ Mark scripts executable on save.
               ("C-c p k" . projectile-kill-buffers)
               ("C-c p s" . projectile-save-project-buffers)
               ("C-c p %" . projectile-replace-regexp))
-       :config (counsel-projectile-mode 1)
-       )
+       :config
+       (setq projectile-enable-caching t)
+       (counsel-projectile-mode 1))
    #+END_SRC
 *** Flycheck config
 #+BEGIN_SRC emacs-lisp

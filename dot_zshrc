@@ -127,6 +127,7 @@ zplug "jreese/zsh-titles"
 
 zplug "lukechilds/zsh-nvm"
 zplug "lukechilds/zsh-better-npm-completion", defer:2
+zplug "esc-zsh/zsh-auto-nvm-use"
 
 zplug "plugins/docker",   from:oh-my-zsh
 zplug "plugins/docker-compose",   from:oh-my-zsh
