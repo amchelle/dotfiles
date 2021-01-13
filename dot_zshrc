@@ -42,11 +42,14 @@ alias ssh='ssh -t '
 alias gst='git status '
 alias c='chezmoi '
 alias fd='fdfind '
+alias rg='rg --smart-case '
 
 mc() {
     mkdir -p -- "$1" &&
         cd -P -- "$1"
 }
+
+export DOCKER_BUILDKIT=1
 
 #####################################################################
 # completions
@@ -175,7 +178,16 @@ bindkey '\ek' deer
 zplug load
 ##
 
-export DOCKER_BUILDKIT=1
+#####################################################################           
+# fzf config                                                                    
+#####################################################################           
+                                                                                
+export FZF_DEFAULT_COMMAND='fd --type f'                                        
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"                                
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh                                          
+                                                                                
+bindkey '^X^T' fzf-file-widget                                                  
+bindkey '^T' transpose-chars
 
 #####################################################################
 # post-config
