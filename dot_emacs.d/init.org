@@ -291,6 +291,10 @@ location
 #+END_SRC
 
 ** Core
+*** So-Long mode
+#+begin_src emacs-lisp
+  (global-so-long-mode 1)
+#+end_src
 *** Org mode config
 
 #+BEGIN_SRC emacs-lisp
