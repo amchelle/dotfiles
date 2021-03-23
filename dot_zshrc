@@ -43,6 +43,7 @@ alias gst='git status '
 alias c='chezmoi '
 alias fd='fdfind '
 alias rg='rg --smart-case '
+alias npx='npx --no-install '
 
 mc() {
     mkdir -p -- "$1" &&
