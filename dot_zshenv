@@ -3,3 +3,4 @@ export NVM_LAZY_LOAD=true
 [ -e "${NVM_DIR}/nvm.sh" ] && source "${NVM_DIR}/nvm.sh"
 
 export PATH=$PATH:/home/amchelle/.local/lib/python3.8/site-packages
+source "$HOME/.cargo/env"

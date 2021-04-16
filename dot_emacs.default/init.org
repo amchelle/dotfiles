@@ -652,7 +652,13 @@ Stale block completely tied to the deprecated dired-details
 *** Javascript config
 **** json-mode
 #+BEGIN_SRC emacs-lisp
-  (use-package json-mode :ensure t)
+  (use-package json-mode
+    :ensure t
+    :config
+    (defun amchelle/config-json-mode ()
+       (make-local-variable 'js-indent-level)
+       (setq js-indent-level 2))
+    (add-hook 'json-mode-hook 'amchelle/config-json-mode))
 #+END_SRC
 *** Typescript config
 #+BEGIN_SRC emacs-lisp
