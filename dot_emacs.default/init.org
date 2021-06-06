@@ -577,6 +577,15 @@ Stale block completely tied to the deprecated dired-details
 #+END_SRC
 
 ** Language configs
+*** editorconfig config
+#+BEGIN_SRC emacs-lisp
+(use-package editorconfig
+  :ensure t
+  :pin melpa-stable
+  :config
+  (editorconfig-mode 1))
+#+END_SRC
+
 *** Programming modes config
 #+BEGIN_SRC emacs-lisp
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
