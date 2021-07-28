@@ -1,8 +1,20 @@
 PURE_PROMPT_SYMBOL=";"
 
+export PATH=$PATH:/home/amchelle/.local/lib/python3.8/site-packages
+source "$HOME/.cargo/env"
+
+#####################################################################
+# Node.js configuration
+#####################################################################
 export NVM_DIR="${HOME}/.local/opt/nvm"
 export NVM_LAZY_LOAD=true
 [ -e "${NVM_DIR}/nvm.sh" ] && source "${NVM_DIR}/nvm.sh"
 
-export PATH=$PATH:/home/amchelle/.local/lib/python3.8/site-packages
-source "$HOME/.cargo/env"
+#####################################################################
+# Brew configuration
+#####################################################################
+path+=('/home/linuxbrew/.linuxbrew/bin')
+path+=('/home/linuxbrwe/.linuxbrew/sbin')
+
+export -U PATH
+export -U FPATH
