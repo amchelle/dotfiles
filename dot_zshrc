@@ -129,9 +129,7 @@ zplug "sobolevn/wakatime-zsh-plugin"
 zplug "chrissicool/zsh-256color"
 zplug "jreese/zsh-titles"
 
-zplug "lukechilds/zsh-nvm"
 zplug "lukechilds/zsh-better-npm-completion", defer:2
-zplug "esc-zsh/zsh-auto-nvm-use"
 
 zplug "plugins/docker",   from:oh-my-zsh
 zplug "plugins/docker-compose",   from:oh-my-zsh
@@ -200,3 +198,5 @@ bindkey '^T' transpose-chars
 
 export -U PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/X11/lib/pkgconfig
 eval "$(direnv hook zsh)"
+eval "$(asdf exec direnv hook zsh)"
+direnv() { asdf exec direnv "$@"; }
