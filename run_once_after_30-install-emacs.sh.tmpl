@@ -16,13 +16,37 @@ xargs -a ~/.local/share/chezmoi/apt-packages-for-emacs.txt sudo apt -y install
 if ! command -v emacs &>/dev/null; then
   DEBIAN_FRONTEND=noninteractive
   sudo apt build-dep -y emacs-lucid
-  [ -d "${HOME}/workspace/scratch" ] || mkdir -p "${HOME}/workspace/scratch"
-  pushd "${HOME}/workspace/scratch"
+
+  tmp="$(mktemp --directory)"
+  trap 'rm -rf "${tmp}"' EXIT
+  pushd "${tmp}"
+
   git clone git://git.savannah.gnu.org/emacs.git
-  trap 'rm "${HOME}/workspace/scratch/emacs"' EXIT
   cd emacs || exit 1
   ./autogen.sh
-  CC="gcc-10" ./configure --with-native-compilation --with-modules=yes --with-mailutils --with-x=yes --with-x-toolkit=lucid 'CFLAGS=-g -fstack-protector-strong -Wformat -Werror=format-security -O3 -mtune=native -march=native -fomit-frame-pointer' --with-jpeg --with-png --with-rsvg --with-tiff --with-wide-int --with-xft --with-xml2 --with-xpm prefix=/usr/local --with-cairo --with-gnutls --without-gconf --without-xwidgets --without-toolkit-scroll-bars --without-gsettings --with-imagemagick
+  CC="gcc-10" ./configure \
+    prefix=/usr/local \
+    --with-cairo \
+    --with-gnutls \
+    --with-imagemagick \
+    --with-jpeg \
+    --with-mailutils \
+    --with-modules=yes \
+    --with-native-compilation \
+    --without-gconf \
+    --without-gsettings \
+    --without-toolkit-scroll-bars \
+    --without-xwidgets \
+    --with-png \
+    --with-rsvg \
+    --with-tiff \
+    --with-wide-int \
+    --with-xft \
+    --with-xml2 \
+    --with-xpm \
+    --with-x-toolkit=lucid \
+    --with-x=yes \
+    'CFLAGS=-g -fstack-protector-strong -Wformat -Werror=format-security -O3 -mtune=native -march=native -fomit-frame-pointer'
   make -j$(nproc)
   sudo make install
 fi
