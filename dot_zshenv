@@ -7,8 +7,12 @@ source "$HOME/.cargo/env"
 # Brew configuration
 #####################################################################
 path+=('/home/linuxbrew/.linuxbrew/bin')
-path+=('/home/linuxbrwe/.linuxbrew/sbin')
+path+=('/home/linuxbrew/.linuxbrew/sbin')
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
 source /home/linuxbrew/.linuxbrew/opt/asdf/asdf.sh
 
 export -U PATH
 export -U FPATH
+

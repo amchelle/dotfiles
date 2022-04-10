@@ -200,4 +200,4 @@ bindkey '^T' transpose-chars
 export -U PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/X11/lib/pkgconfig
 eval "$(direnv hook zsh)"
 eval "$(asdf exec direnv hook zsh)"
-direnv() { asdf exec direnv "$@"; }
+source ${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc
