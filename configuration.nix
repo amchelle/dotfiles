@@ -8,6 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./modules/sops.nix
     ];
 
   # Bootloader.
@@ -43,7 +44,10 @@
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
-
+  
+  # Change Caps Lock to CTRL
+  services.xserver.xkbOptions = "ctrl:swapcaps";
+  
   # Configure keymap in X11
   services.xserver = {
     layout = "us";
@@ -87,6 +91,7 @@
       nix-direnv
 
       firefox
+      gnupg
       helix
     ];
   };
@@ -123,24 +128,42 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    bottom
+    htop
+    kitty
     vim
+    yubioath-desktop
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   #  wget
   ];
 
+  services.github-runner = {
+    enable = true;
+    name = "elaine";
+    url = "https://github.com/stratos-trade";
+    tokenFile = "/run/secrets/github_runner_token_stratos";
+    extraPackages = with pkgs; [
+      config.virtualisation.docker.package
+    ];
+  };
+
+  virtualisation.docker.enable = true;
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  services.pcscd.enable = true; # For YubiKey TOTP.
+      
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];

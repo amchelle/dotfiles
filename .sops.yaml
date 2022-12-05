@@ -1,0 +1,10 @@
+---
+keys:
+  - &admin_amchelle 73CF4B6DB01BAADB578C86E88E05E2313F2CFFB3
+  - &server_elaine 25ba07ec6d5fbc69f9a42b78d9457a224f54574a
+creation_rules:
+  - path_regex: secrets/main\.yaml$
+    key_groups:
+    - pgp:
+      - *admin_amchelle
+      - *server_elaine
