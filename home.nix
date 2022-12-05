@@ -51,6 +51,7 @@
     text = ''
       alias g='git'
       alias gs='git status'
+      alias h=hx
       eval "$(direnv hook zsh)"
       eval "$(starship init zsh)"
     '';
