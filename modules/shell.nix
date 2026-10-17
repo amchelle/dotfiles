@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, inputs, pkgs, ... }:
 {
   home.packages = [ pkgs.helix ];
   home.sessionVariables = {
@@ -27,6 +27,18 @@
             /run/current-system/sw/bin /nix/var/nix/profiles/default/bin $path)
       export PATH
     '';
+  };
+  programs.atuin = {
+    enable = true;
+    package = inputs.atuin-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.atuin;
+    enableZshIntegration = true;
+    flags = [ "--disable-up-arrow" ];
+    settings = {
+      dialect = "us";
+      auto_sync = false;
+      update_check = false;
+      search_mode = "fuzzy";
+    };
   };
   programs.direnv = {
     enable = true;
