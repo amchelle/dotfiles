@@ -58,10 +58,12 @@ sudo /nix/var/nix/profiles/default/bin/nix run .#darwin-rebuild -- switch --flak
 
 Atuin provides fuzzy Ctrl-R history search without taking over Up Arrow, using
 [EricCrosson's shell](https://github.com/EricCrosson/dotfiles/blob/d87b3a5c875d0451e112ade876e333c03ba2c0d5/profiles/eric/modules/zsh.nix)
-as the reference. Sync is deliberately disabled: no history account or upload
-is configured. Existing zsh history is not imported automatically.
-Run `nix develop --command python3 tests/shell-smoke.py` to exercise recording,
-exit status, working directory, and Ctrl-R selection/replay in an isolated PTY.
+as the reference. Zsh Autosuggestions shows matching history in dim text as you
+type; Right Arrow or Ctrl-E accepts the suggestion. Sync is deliberately
+disabled: no history account or upload is configured. Existing zsh history is
+not imported automatically. Run `nix develop --command python3 tests/shell-smoke.py`
+to exercise recording, exit status, working directory, and Ctrl-R selection/replay
+in an isolated PTY.
 Alt-C uses the reference's synchronous fzf directory widget and `fd --type d`:
 selection executes a quoted `builtin cd`, preserving pending input for the
 next prompt; cancellation leaves the directory/input unchanged. It is bound

@@ -26,9 +26,12 @@
       typeset -U path
       path=("$HOME/.nix-profile/bin" "/etc/profiles/per-user/$USER/bin"
             /run/current-system/sw/bin /nix/var/nix/profiles/default/bin $path)
-      export PATH
     '';
-    initContent = builtins.readFile ./fzf-cd-widget.zsh;
+    initContent = ''
+      ${builtins.readFile ./fzf-cd-widget.zsh}
+      source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+      ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+    '';
   };
   programs.atuin = {
     enable = true;
