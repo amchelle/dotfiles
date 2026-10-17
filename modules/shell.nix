@@ -8,6 +8,9 @@ let
   };
 in
 {
+  imports = [ inputs.nix-index-database.homeModules.nix-index ];
+  programs.nix-index-database.comma.enable = true;
+
   home.packages = [ pkgs.helix pkgs.fd pkgs.fzf pkgs.eza ];
   home.sessionVariables = {
     EDITOR = "hx";

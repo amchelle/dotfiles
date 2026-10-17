@@ -64,6 +64,12 @@ disabled: no history account or upload is configured. Existing zsh history is
 not imported automatically. Run `nix develop --command python3 tests/shell-smoke.py`
 to exercise recording, exit status, working directory, and Ctrl-R selection/replay
 in an isolated PTY.
+`,` runs a command from Nixpkgs without installing it permanently. The
+Home Manager setup uses [nix-index-database's prebuilt database](https://github.com/nix-community/nix-index-database)
+to find a package by executable name. For example, `, cowsay hello` runs
+`cowsay` with `hello` as its argument; `, -i cowsay` installs the package
+instead. The database revision is tracked by `flake.lock`.
+
 Alt-C uses the reference's synchronous fzf directory widget and `fd --type d`:
 selection executes a quoted `builtin cd`, preserving pending input for the
 next prompt; cancellation leaves the directory/input unchanged. It is bound
