@@ -2,6 +2,9 @@
 set -euo pipefail
 
 omp=${OMP_BIN:-$HOME/.nix-profile/bin/omp}
+if [[ ! -x $omp && -x /etc/profiles/per-user/$(id -un)/bin/omp ]]; then
+  omp=/etc/profiles/per-user/$(id -un)/bin/omp
+fi
 [[ -x $omp ]] || {
   printf 'FAIL: managed omp launcher unavailable at %s; activate the dotfiles generation first\n' "$omp" >&2
   exit 1
@@ -9,7 +12,7 @@ omp=${OMP_BIN:-$HOME/.nix-profile/bin/omp}
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-for args in '--model openai/gpt-6.1-sol' '--provider openai' '--config /tmp/direct.yml'; do
+for args in '--model openai/gpt-6.1-sol' '--model=other' '--provider openai' '--config /tmp/direct.yml'; do
   set +e
   # Intentional word splitting into the CLI's distinct arguments.
   # shellcheck disable=SC2086
@@ -25,4 +28,13 @@ for args in '--model openai/gpt-6.1-sol' '--provider openai' '--config /tmp/dire
     exit 1
   }
 done
-printf 'PASS: managed omp rejects model, provider, and config overrides\n'
+set +e
+"$omp" --model smol --help >"$tmp/smol.out" 2>"$tmp/smol.err"
+status=$?
+set -e
+[[ $status == 0 ]] || {
+  printf 'FAIL: managed omp rejected or failed --model smol (exit %s)\n' "$status" >&2
+  cat "$tmp/smol.err" >&2
+  exit 1
+}
+printf 'PASS: managed omp allows --model smol and rejects provider/config and non-smol model overrides\n'

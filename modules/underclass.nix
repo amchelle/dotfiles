@@ -101,24 +101,43 @@ let
       -c 'model_providers.underclass.supports_websockets=false' "$@"
   '';
   omp = pkgs.writeShellScriptBin "omp" ''
-    for arg in "$@"; do
-      case "$arg" in
-        --model|--model=*|--provider|--provider=*|--config|--config=*)
-          printf 'Refusing OMP provider/config override; ordinary omp is Underclass-only.\n' >&2
+    model=underclass/gpt-6.1-sol
+    args=()
+    while (($#)); do
+      case "$1" in
+        --model)
+          if [[ $# -lt 2 || "$2" != smol ]]; then
+            printf 'Refusing OMP provider/config override; only --model smol is permitted.\\n' >&2
+            exit 2
+          fi
+          model=underclass/gpt-6-luna:auto
+          shift 2
+          ;;
+        --model=*)
+          if [[ "$1" != --model=smol ]]; then
+            printf 'Refusing OMP provider/config override; only --model smol is permitted.\\n' >&2
+            exit 2
+          fi
+          model=underclass/gpt-6-luna:auto
+          shift
+          ;;
+        --provider|--provider=*|--config|--config=*)
+          printf 'Refusing OMP provider/config override; ordinary omp is Underclass-only.\\n' >&2
           exit 2
           ;;
+        *) args+=("$1"); shift ;;
       esac
     done
     ${requireService}
     [[ -x /opt/homebrew/bin/omp ]] || {
-      printf 'Existing Homebrew omp is missing: /opt/homebrew/bin/omp\n' >&2
+      printf 'Existing Homebrew omp is missing: /opt/homebrew/bin/omp\\n' >&2
       exit 1
     }
     unset value
     export PI_OPENAI_STATEFUL=0
-    exec /opt/homebrew/bin/omp \
-      --config '${home}/.config/underclass/omp-pool.yml' \
-      --model underclass/gpt-6.1-sol "$@"
+    exec /opt/homebrew/bin/omp \\
+      --config '${home}/.config/underclass/omp-pool.yml' \\
+      --model "$model" "''${args[@]}"
   '';
   ompModels = {
     providers.underclass = {

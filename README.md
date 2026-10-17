@@ -88,14 +88,18 @@ test.
   `/opt/homebrew/bin/omp` with `~/.config/underclass/omp-pool.yml`.
   The launcher checks Underclass and its proxy key before starting; if the
   service is unavailable, `omp` exits instead of falling back to direct
-  inference. It rejects `--model`, `--provider`, and `--config` overrides.
-- Every OMP model role, including `judge`, resolves through Underclass, and
-  model fallback is disabled.
-- Run `bash tests/omp-routing-smoke.sh` after activation to verify those CLI
-  overrides are rejected. This controls the normal managed `omp` command, not
-  explicit invocation of `/opt/homebrew/bin/omp`, alternate OMP installations,
-  or other network clients. Enforcing a network-wide no-direct-OpenAI rule
-  would require separate egress controls; this configuration does not claim it.
+  inference. `--model smol` is the sole permitted model override and maps to
+  the configured Underclass smol role; all other model overrides and all
+  `--provider`/`--config` overrides are rejected.
+
+  Model fallback is disabled.
+- Run `bash tests/omp-routing-smoke.sh` after activation to verify that
+  `--model smol` routes to the configured role and that provider/config and
+  other model overrides remain rejected. This controls the normal managed
+  `omp` command, not explicit invocation of `/opt/homebrew/bin/omp`, alternate
+  OMP installations, or other network clients. Enforcing a network-wide
+  no-direct-OpenAI rule would require separate egress controls; this
+  configuration does not claim it.
 - `codex-pool` remains a separate launcher for Codex.
 
 Open `http://127.0.0.1:43871/`. Invoke `underclass-ui-token` only when ready to
