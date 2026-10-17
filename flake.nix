@@ -15,24 +15,28 @@
 
   outputs = { self, nixpkgs, home-manager, sops-nix }: 
     let
+      shellsFor = system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+          };
+        in pkgs.mkShell {
+          sopsPGPKeyDirs = [
+            "${toString ./.}/keys/hosts"
+            "${toString ./.}/keys/users"
+          ];
+          nativeBuildInputs = [
+            (pkgs.callPackage sops-nix {}).sops-import-keys-hook
+          ];
+        };
       system = "x86_64-linux";
       user = "amchelle";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
       lib = nixpkgs.lib;
     in
     {
-      devShells.x86_64-linux.default = pkgs.mkShell {
-        sopsPGPKeyDirs = [
-          "${toString ./.}/keys/hosts"
-          "${toString ./.}/keys/users"
-        ];
-        nativeBuildInputs = [
-          (pkgs.callPackage sops-nix {}).sops-import-keys-hook
-        ];
-      };
+      devShells.x86_64-linux.default = shellsFor "x86_64-linux";
+      devShells.aarch64-darwin.default = shellsFor "aarch64-darwin";
 
       nixosConfigurations = {
         elaine = lib.nixosSystem {
