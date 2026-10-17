@@ -19,6 +19,14 @@ bash tests/underclass-smoke.sh
 bash tests/activation-smoke.sh
 ```
 
+Direnv uses Home Manager's `programs.direnv.silent` to suppress routine
+loading/cache messages and the environment export diff without hiding errors
+or `.envrc` stderr. This is configured in `~/.config/direnv/direnv.toml`, so it
+also applies to existing shells after activation. To verify a fresh load, run
+`(unset DIRENV_DIFF DIRENV_WATCHES DIRENV_DIR; eval "$(direnv export zsh)")`
+from this directory in Zsh: the development environment should load without
+routine direnv output. Unapproved or failing `.envrc` files still report errors.
+
 Nix store maintenance is declarative through root launchd daemons because
 Determinate owns the Nix installation (`nix.enable = false`): garbage collection
 runs daily at 03:00 and deletes generations older than 7 days; store

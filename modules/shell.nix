@@ -3,7 +3,6 @@
   home.packages = [ pkgs.helix ];
   home.sessionVariables = {
     EDITOR = "hx";
-    DIRENV_LOG_FORMAT = "";
   };
   home.sessionPath = [ "$HOME/bin" ];
 
@@ -31,6 +30,7 @@
   };
   programs.direnv = {
     enable = true;
+    silent = true;
     nix-direnv.enable = true;
     enableZshIntegration = true;
   };
