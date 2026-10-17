@@ -101,12 +101,6 @@ let
       -c 'model_providers.underclass.supports_websockets=false' "$@"
   '';
   omp = pkgs.writeShellScriptBin "omp" ''
-    set -euo pipefail
-    [[ -x /opt/homebrew/bin/omp ]] || {
-      printf 'Existing Homebrew omp is missing: /opt/homebrew/bin/omp\n' >&2
-      exit 1
-    }
-    ${requireService}
     for arg in "$@"; do
       case "$arg" in
         --model|--model=*|--provider|--provider=*|--config|--config=*)
@@ -115,6 +109,11 @@ let
           ;;
       esac
     done
+    ${requireService}
+    [[ -x /opt/homebrew/bin/omp ]] || {
+      printf 'Existing Homebrew omp is missing: /opt/homebrew/bin/omp\n' >&2
+      exit 1
+    }
     unset value
     export PI_OPENAI_STATEFUL=0
     exec /opt/homebrew/bin/omp \
