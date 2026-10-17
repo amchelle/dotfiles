@@ -23,6 +23,7 @@ in
     '';
     shellAliases = {
       g = "git";
+      l = "eza -lg --git --time-style=long-iso";
       gs = "git status";
       h = "hx";
     };
