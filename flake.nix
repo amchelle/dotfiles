@@ -1,58 +1,40 @@
 {
-  description = "Amchelle's NixOS flake";
+  description = "Amchelle's macOS host and explicit Underclass clients";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    sops-nix = {
-      url = "github:mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nix-darwin.url = "github:nix-darwin/nix-darwin/master";
+    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    underclass.url = "github:ghuntley/underclass/469aff4c797e14052285d64d9acfa4b2fc0c73a3";
   };
 
-  outputs = { self, nixpkgs, home-manager, sops-nix }: 
+  outputs = inputs@{ nixpkgs, nix-darwin, home-manager, underclass, ... }:
     let
-      shellsFor = system:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-        in pkgs.mkShell {
-          sopsPGPKeyDirs = [
-            "${toString ./.}/keys/hosts"
-            "${toString ./.}/keys/users"
-          ];
-          nativeBuildInputs = [
-            (pkgs.callPackage sops-nix {}).sops-import-keys-hook
-          ];
-        };
-      system = "x86_64-linux";
-      user = "amchelle";
-      lib = nixpkgs.lib;
-    in
-    {
-      devShells.x86_64-linux.default = shellsFor "x86_64-linux";
-      devShells.aarch64-darwin.default = shellsFor "aarch64-darwin";
-
-      nixosConfigurations = {
-        elaine = lib.nixosSystem {
-          inherit system;
-          modules = [ 
-            ./configuration.nix
-            sops-nix.nixosModules.sops
-            home-manager.nixosModules.home-manager {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${user} = {
-                imports = [ ./home.nix ];
-              };
-            }             
-          ];
-        };
+      system = "aarch64-darwin";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      darwinConfigurations."Amchelles-iMac" = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./configuration.nix
+          home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.backupFileExtension = "pre-phoenix-20261017T131111Z";
+            home-manager.users.amchellecrosson = import ./home.nix;
+          }
+        ];
+      };
+      packages.${system} = {
+        underclass = underclass.packages.${system}.underclass;
+        darwin-rebuild = nix-darwin.packages.${system}.darwin-rebuild;
+      };
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [ pkgs.git pkgs.curl pkgs.jq pkgs.sqlite ];
       };
     };
 }
