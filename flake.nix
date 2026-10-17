@@ -34,7 +34,7 @@
         darwin-rebuild = nix-darwin.packages.${system}.darwin-rebuild;
       };
       devShells.${system}.default = pkgs.mkShell {
-        packages = [ pkgs.git pkgs.curl pkgs.jq pkgs.sqlite ];
+        packages = [ pkgs.git pkgs.curl pkgs.jq pkgs.sqlite pkgs.python3 ];
       };
     };
 }
