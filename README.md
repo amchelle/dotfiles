@@ -14,11 +14,22 @@ nix develop
 nix build --no-link .#underclass
 nix flake check
 nix build --no-link '.#darwinConfigurations.Amchelles-iMac.system'
-sudo darwin-rebuild switch --flake .#Amchelles-iMac
+sudo -kn /run/current-system/sw/bin/darwin-rebuild switch --flake .#Amchelles-iMac
 bash tests/underclass-smoke.sh
+bash tests/activation-smoke.sh
 ```
 
-For the first activation, before `darwin-rebuild` is on PATH:
+The first activation requires authentication to install the sudo rule. Once
+installed, only `amchellecrosson` running the root-owned
+`/run/current-system/sw/bin/darwin-rebuild` is exempt; unrelated sudo commands
+still require authentication. `-kn` ignores cached credentials and fails rather
+than prompting. The smoke check verifies both sides of that boundary.
+
+This is still root-equivalent trust in this user's Nix configurations:
+`darwin-rebuild` can activate arbitrary configuration. It is not a sandbox.
+Never grant passwordless access to a user-writable activation script.
+
+Before `darwin-rebuild` is installed, bootstrap once with authentication:
 
 ```sh
 sudo /nix/var/nix/profiles/default/bin/nix run .#darwin-rebuild -- switch --flake .#Amchelles-iMac
