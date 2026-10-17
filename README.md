@@ -51,11 +51,11 @@ distinct ChatGPT/Codex identity interactively; do not copy existing clients'
 OAuth tokens. Banked reset credits are **manual**; ordinary quota-window
 recovery remains automatic.
 
-The user launch agent is `user/$(id -u)/org.nix-community.home.underclass`:
+The login-discovered launch agent is `gui/$(id -u)/org.nix-community.home.underclass`:
 
 ```sh
-launchctl print "user/$(id -u)/org.nix-community.home.underclass"
-launchctl kickstart -k "user/$(id -u)/org.nix-community.home.underclass"
+launchctl print "gui/$(id -u)/org.nix-community.home.underclass"
+launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.underclass"
 utop
 ```
 
@@ -65,6 +65,14 @@ umask 077. The upstream 0666 monitor socket is protected by its 0700 parent.
 Logs in `~/Library/Logs/underclass/` are truncated at service start; request
 bodies are not logged. This is a user-session service, not availability while
 logged out or asleep.
+
+After reboot, macOS discovers the persisted plist in `~/Library/LaunchAgents`
+at graphical login. `RunAtLoad` starts it, `KeepAlive` supervises it, and the
+launcher waits for `/nix/store`. This intentionally uses the GUI domain rather
+than explicit user-domain registration, whose reboot persistence is affected by
+https://github.com/nix-community/home-manager/issues/9656.
+Reboot/login autostart is the intended lifecycle, not a demonstrated acceptance
+result; availability before login is not provided.
 
 ## Preservation and rollback
 

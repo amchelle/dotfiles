@@ -141,7 +141,9 @@ in {
   '';
   launchd.agents.underclass = {
     enable = true;
-    domain = "user";
+    # ~/Library/LaunchAgents is rediscovered at graphical login after reboot.
+    # Explicit user-domain registration does not reliably survive reboot.
+    domain = "gui";
     config = {
       ProgramArguments = [ "${service}" ];
       RunAtLoad = true;
