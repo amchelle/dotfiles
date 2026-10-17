@@ -1,8 +1,9 @@
 { config, inputs, pkgs, ... }:
 {
-  home.packages = [ pkgs.helix ];
+  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf ];
   home.sessionVariables = {
     EDITOR = "hx";
+    FZF_ALT_C_COMMAND = "fd --type d";
   };
   home.sessionPath = [ "$HOME/bin" ];
 
@@ -27,6 +28,7 @@
             /run/current-system/sw/bin /nix/var/nix/profiles/default/bin $path)
       export PATH
     '';
+    initContent = builtins.readFile ./fzf-cd-widget.zsh;
   };
   programs.atuin = {
     enable = true;

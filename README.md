@@ -56,6 +56,24 @@ Before `darwin-rebuild` is installed, bootstrap once with authentication:
 sudo /nix/var/nix/profiles/default/bin/nix run .#darwin-rebuild -- switch --flake .#Amchelles-iMac
 ```
 
+Atuin provides fuzzy Ctrl-R history search without taking over Up Arrow, using
+[EricCrosson's shell](https://github.com/EricCrosson/dotfiles/blob/d87b3a5c875d0451e112ade876e333c03ba2c0d5/profiles/eric/modules/zsh.nix)
+as the reference. Sync is deliberately disabled: no history account or upload
+is configured. Existing zsh history is not imported automatically.
+Run `nix develop --command python3 tests/shell-smoke.py` to exercise recording,
+exit status, working directory, and Ctrl-R selection/replay in an isolated PTY.
+Alt-C uses the reference's synchronous fzf directory widget and `fd --type d`:
+selection executes a quoted `builtin cd`, preserving pending input for the
+next prompt; cancellation leaves the directory/input unchanged. It is bound
+in emacs, vi insert, and vi command maps. The PTY smoke also covers paths with
+spaces, pending-input preservation, and cancellation.
+
+The main nixpkgs input tracks current `nixpkgs-unstable`. Atuin alone uses
+the October 11 unstable revision `8aa2baf1`, whose Apple Silicon binary is
+cached (18.21.0, 18.9 MiB download / 60.6 MiB installed). Current unstable's
+18.23.0 requires local compilation. Check cache availability with `nix build
+--dry-run` before updating this exception; avoid fetching a Rust build toolchain.
+
 The smoke script exercises real HTTP/auth boundaries, not subscription
 inference. Its optional `UNDERCLASS_ORIGIN` defaults to `http://127.0.0.1:8080`.
 The upstream Underclass package disables Rust checks; building is not a routing

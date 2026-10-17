@@ -65,9 +65,9 @@ class Shell:
         return self.until(self.prompt)
 
     def close(self):
-        os.kill(self.pid, signal.SIGKILL)
-        os.waitpid(self.pid, 0)
+        os.killpg(self.pid, signal.SIGKILL)
         os.close(self.fd)
+        os.waitpid(self.pid, 0)
 
 
 def check_history(shell):
@@ -100,11 +100,40 @@ def check_history(shell):
     print("PASS: zsh records command/exit/cwd and Ctrl-R searches/replays Atuin history")
 
 
+def check_alt_c(shell):
+    target = shell.root / "directory with spaces"
+    target.mkdir()
+    marker = shell.root / "buffer-executed"
+    # Selection must change directory without executing the pending command,
+    # then restore that command at the next prompt.
+    shell.send(f"touch '{marker}'".encode() + b"\x1bc")
+    shell.until(b"directory with spaces")
+    shell.send(b"\r")
+    shell.until(b"buffer-executed'")
+    assert not marker.exists(), "Alt-C executed the pending input"
+    shell.send(b"\r")
+    shell.until(shell.prompt)
+    deadline = time.monotonic() + 5
+    while not marker.exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert marker.exists(), f"Alt-C failed to restore pending input: {shell.output[-4000:]!r}"
+    shell.command("pwd > selected-directory")
+    assert (target / "selected-directory").read_text().strip() == str(target)
+    shell.send(b"\x1bc")
+    time.sleep(0.3)
+    shell.send(b"\x1b")
+    shell.until(shell.prompt)
+    shell.command("pwd > after-cancel")
+    assert (target / "after-cancel").read_text().strip() == str(target)
+    print("PASS: Alt-C handles spaces, preserves pending input, and cancels without cd")
+
+
 if __name__ == "__main__":
     assert shutil.which("atuin"), "Activate Atuin before running this test"
     with tempfile.TemporaryDirectory(prefix="dotfiles-shell-") as directory:
         shell = Shell(Path(directory).resolve())
         try:
             check_history(shell)
+            check_alt_c(shell)
         finally:
             shell.close()
