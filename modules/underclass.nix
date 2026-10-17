@@ -135,8 +135,8 @@ let
     }
     unset value
     export PI_OPENAI_STATEFUL=0
-    exec /opt/homebrew/bin/omp \\
-      --config '${home}/.config/underclass/omp-pool.yml' \\
+    exec /opt/homebrew/bin/omp \
+      --config '${home}/.config/underclass/omp-pool.yml' \
       --model "$model" "''${args[@]}"
   '';
   ompModels = {

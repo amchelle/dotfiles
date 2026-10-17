@@ -37,4 +37,9 @@ set -e
   cat "$tmp/smol.err" >&2
   exit 1
 }
-printf 'PASS: managed omp allows --model smol and rejects provider/config and non-smol model overrides\n'
+grep -Fq 'USAGE' "$tmp/smol.out" || {
+  printf 'FAIL: --model smol did not reach OMP as an option (unexpected output)\n' >&2
+  cat "$tmp/smol.out" "$tmp/smol.err" >&2
+  exit 1
+}
+printf 'PASS: managed omp routes --model smol to OMP and rejects provider/config and non-smol model overrides\n'
