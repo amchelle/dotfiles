@@ -8,5 +8,6 @@
   security.sudo.extraConfig = ''
     amchellecrosson ALL=(root) NOPASSWD: /run/current-system/sw/bin/darwin-rebuild
   '';
+  security.pam.services.sudo_local.touchIdAuth = true;
   system.stateVersion = 7;
 }

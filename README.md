@@ -29,6 +29,14 @@ This is still root-equivalent trust in this user's Nix configurations:
 `darwin-rebuild` can activate arbitrary configuration. It is not a sandbox.
 Never grant passwordless access to a user-writable activation script.
 
+Sudo uses macOS's native Touch ID PAM module through `sudo_local`, which
+survives OS updates without editing Apple's main PAM policy. For ordinary
+sudo commands, an enrolled Touch ID keyboard/sensor and a local interactive
+session are required; the password remains a fallback. Rebuilds bypass
+authentication entirely via the narrower rule above. Verify biometrics in
+a local terminal with `bash tests/touchid-smoke.sh`; use your fingerprint,
+not password fallback. No fingerprint data is managed by these dotfiles.
+
 Before `darwin-rebuild` is installed, bootstrap once with authentication:
 
 ```sh
