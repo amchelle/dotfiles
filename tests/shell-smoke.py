@@ -117,13 +117,17 @@ def check_alt_c(shell):
     while not marker.exists() and time.monotonic() < deadline:
         time.sleep(0.05)
     assert marker.exists(), f"Alt-C failed to restore pending input: {shell.output[-4000:]!r}"
-    shell.command("pwd > selected-directory")
+    shell.send(b"pwd > selected-directory; printf '__CD_CHECK_FINISHED__\\n'\n")
+    shell.until(b"\r\n__CD_CHECK_FINISHED__\r\n")
     assert (target / "selected-directory").read_text().strip() == str(target)
-    shell.send(b"\x1bc")
-    time.sleep(0.3)
-    shell.send(b"\x1b")
     shell.until(shell.prompt)
-    shell.command("pwd > after-cancel")
+    shell.send(b"\x1bc")
+    shell.until(b"\x1b[6n")
+    time.sleep(0.5)
+    shell.send(b"\x03")
+    shell.until(shell.prompt)
+    shell.send(b"pwd > after-cancel; printf '__CANCEL_CHECK_FINISHED__\\n'\n")
+    shell.until(b"\r\n__CANCEL_CHECK_FINISHED__\r\n")
     assert (target / "after-cancel").read_text().strip() == str(target)
     print("PASS: Alt-C handles spaces, preserves pending input, and cancels without cd")
 
