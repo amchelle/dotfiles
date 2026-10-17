@@ -108,7 +108,7 @@ def check_alt_c(shell):
     # then restore that command at the next prompt.
     shell.send(f"touch '{marker}'".encode() + b"\x1bc")
     shell.until(b"directory with spaces")
-    shell.send(b"\r")
+    shell.send(b"directory with spaces\r")
     shell.until(b"buffer-executed'")
     assert not marker.exists(), "Alt-C executed the pending input"
     shell.send(b"\r")
