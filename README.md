@@ -69,6 +69,10 @@ selection executes a quoted `builtin cd`, preserving pending input for the
 next prompt; cancellation leaves the directory/input unchanged. It is bound
 in emacs, vi insert, and vi command maps. The PTY smoke also covers paths with
 spaces, pending-input preservation, and cancellation.
+The esc-zsh smart-cd hook also runs synchronously on shell startup and after
+each directory change: it prints an `eza` listing, then `git status` when inside
+a repository. The package provides `eza` for the plugin's default listing
+command.
 
 The main nixpkgs input tracks current `nixpkgs-unstable`. Atuin alone uses
 the October 11 unstable revision `8aa2baf1`, whose Apple Silicon binary is

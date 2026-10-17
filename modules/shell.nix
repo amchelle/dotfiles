@@ -1,6 +1,14 @@
 { config, inputs, pkgs, ... }:
+let
+  smartCd = pkgs.fetchFromGitHub {
+    owner = "esc-zsh";
+    repo = "smart-cd";
+    rev = "57051138141179c293dcaef2da659e42ad4f9eeb";
+    sha256 = "sha256-TgWwvJqQvIjRXpYuSVZ4ZqJCqLF7a5IIqLPzyYNWaTs=";
+  };
+in
 {
-  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf ];
+  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf pkgs.eza ];
   home.sessionVariables = {
     EDITOR = "hx";
     FZF_ALT_C_COMMAND = "fd --type d";
@@ -28,6 +36,8 @@
             /run/current-system/sw/bin /nix/var/nix/profiles/default/bin $path)
     '';
     initContent = ''
+      # Show directory contents and Git status on directory changes.
+      source ${smartCd}/smart-cd.zsh
       ${builtins.readFile ./fzf-cd-widget.zsh}
       source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
       ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'

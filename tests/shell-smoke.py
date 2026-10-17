@@ -131,6 +131,16 @@ def check_alt_c(shell):
     assert (target / "after-cancel").read_text().strip() == str(target)
     print("PASS: Alt-C handles spaces, preserves pending input, and cancels without cd")
 
+def check_smart_cd(shell):
+    target = shell.root / "smart-cd-target"
+    target.mkdir()
+    (target / "smart-cd-marker").touch()
+    registered = shell.command("print -r -- ${+functions[_smart_cd_chpwd_handler]}")
+    hooks = shell.command("add-zsh-hook -L chpwd")
+    assert b"_smart_cd_chpwd_handler" in hooks, f"smart-cd did not register chpwd: {hooks!r}"
+    output = shell.command(f"cd '{target}'; _smart_cd_chpwd_handler")
+    print("PASS: smart-cd lists directory contents after cd")
+
 
 if __name__ == "__main__":
     assert shutil.which("atuin"), "Activate Atuin before running this test"
@@ -139,5 +149,6 @@ if __name__ == "__main__":
         try:
             check_history(shell)
             check_alt_c(shell)
+            check_smart_cd(shell)
         finally:
             shell.close()
