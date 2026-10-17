@@ -19,6 +19,11 @@ bash tests/underclass-smoke.sh
 bash tests/activation-smoke.sh
 ```
 
+Nix store maintenance is declarative through root launchd daemons because
+Determinate owns the Nix installation (`nix.enable = false`): garbage collection
+runs daily at 03:00 and deletes generations older than 7 days; store
+optimization runs daily at 04:15. These jobs take effect after activation.
+
 The first activation requires authentication to install the sudo rule. Once
 installed, only `amchellecrosson` running the root-owned
 `/run/current-system/sw/bin/darwin-rebuild` is exempt; unrelated sudo commands
