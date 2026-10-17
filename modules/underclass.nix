@@ -5,6 +5,9 @@ let
   dataDir = "${home}/.local/share/underclass";
   logDir = "${home}/Library/Logs/underclass";
   db = "${dataDir}/pool.db";
+  # Unused locally and below this Mac's 49152–65535 ephemeral range.
+  bind = "127.0.0.1:43871";
+  origin = "http://${bind}";
   service = pkgs.writeShellScript "underclass-service" ''
     set -euo pipefail
     umask 077
@@ -74,8 +77,8 @@ let
     ${readKey}
     read_key proxy_key
     if ! ${pkgs.curl}/bin/curl --noproxy '*' --fail --silent --output /dev/null \
-        --connect-timeout 2 --max-time 3 http://127.0.0.1:8080/; then
-      printf 'Underclass unavailable at http://127.0.0.1:8080; start or repair the user service. No direct-account fallback.\n' >&2
+        --connect-timeout 2 --max-time 3 '${origin}/'; then
+      printf 'Underclass unavailable at ${origin}; start or repair the user service. No direct-account fallback.\n' >&2
       exit 1
     fi
   '';
@@ -91,19 +94,27 @@ let
     exec /opt/homebrew/bin/codex \
       -c 'model_provider="underclass"' \
       -c 'model_providers.underclass.name="Underclass"' \
-      -c 'model_providers.underclass.base_url="http://127.0.0.1:8080/v1"' \
+      -c 'model_providers.underclass.base_url="${origin}/v1"' \
       -c 'model_providers.underclass.env_key="UNDERCLASS_PROXY_KEY"' \
       -c 'model_providers.underclass.wire_api="responses"' \
       -c 'model_providers.underclass.requires_openai_auth=false' \
       -c 'model_providers.underclass.supports_websockets=false' "$@"
   '';
-  ompPool = pkgs.writeShellScriptBin "omp-pool" ''
+  omp = pkgs.writeShellScriptBin "omp" ''
     set -euo pipefail
     [[ -x /opt/homebrew/bin/omp ]] || {
       printf 'Existing Homebrew omp is missing: /opt/homebrew/bin/omp\n' >&2
       exit 1
     }
     ${requireService}
+    for arg in "$@"; do
+      case "$arg" in
+        --model|--model=*|--provider|--provider=*|--config|--config=*)
+          printf 'Refusing OMP provider/config override; ordinary omp is Underclass-only.\n' >&2
+          exit 2
+          ;;
+      esac
+    done
     unset value
     export PI_OPENAI_STATEFUL=0
     exec /opt/homebrew/bin/omp \
@@ -112,7 +123,7 @@ let
   '';
   ompModels = {
     providers.underclass = {
-      baseUrl = "http://127.0.0.1:8080/v1";
+      baseUrl = "${origin}/v1";
       api = "openai-responses";
       auth = "apiKey";
       authHeader = true;
@@ -134,9 +145,9 @@ let
     };
   };
 in {
-  home.packages = [ underclass uiToken codexPool ompPool ];
+  home.packages = [ underclass uiToken codexPool omp ];
   xdg.configFile."underclass/config.toml".text = ''
-    bind = "127.0.0.1:8080"
+    bind = "${bind}"
     auto_codex_resets = false
   '';
   launchd.agents.underclass = {
@@ -161,8 +172,7 @@ in {
       vision = "underclass/gpt-6-luna:auto";
       plan = "underclass/gpt-6.1-sol:auto";
       task = "underclass/gpt-6-luna:auto";
-      commit = "underclass/gpt-6-luna:auto";
-      judge = "openrouter/inception/mercury-decide:free";
+      judge = "underclass/gpt-6.1-sol:auto";
       slow = "underclass/gpt-6.1-sol:auto";
       smol = "underclass/gpt-6-luna:auto";
     };

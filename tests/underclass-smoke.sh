@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 umask 077
-origin=${UNDERCLASS_ORIGIN:-http://127.0.0.1:8080}
+origin=${UNDERCLASS_ORIGIN:-http://127.0.0.1:43871}
 db=${UNDERCLASS_DATA_DIR:-$HOME/.local/share/underclass}/pool.db
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

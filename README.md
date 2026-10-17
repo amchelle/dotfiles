@@ -75,31 +75,37 @@ cached (18.21.0, 18.9 MiB download / 60.6 MiB installed). Current unstable's
 --dry-run` before updating this exception; avoid fetching a Rust build toolchain.
 
 The smoke script exercises real HTTP/auth boundaries, not subscription
-inference. Its optional `UNDERCLASS_ORIGIN` defaults to `http://127.0.0.1:8080`.
+inference. Its optional `UNDERCLASS_ORIGIN` defaults to `http://127.0.0.1:43871`.
 The upstream Underclass package disables Rust checks; building is not a routing
 test.
 
-## Explicit subscription pool
+## OMP through Underclass
 
-- `codex-pool` runs the existing `/opt/homebrew/bin/codex` with transient
-  provider overrides; model, sandbox settings, authentication and ordinary
-  defaults remain in the existing Codex configuration.
-- `omp-pool` runs the existing `/opt/homebrew/bin/omp` with a role overlay and
-  the standard Responses transport. It disables stateful chaining and model
-  fallback. Ordinary `omp` keeps its defaults. The judge remains on its existing
-  provider.
-- Both launchers fail closed if the local service/key is unavailable. Neither
-  silently falls back to direct-account inference.
-- The three explicit models have a conservative **local** 272000-token context
-  budget, not a claim of advertised subscription capacity. Inherited API-price
-  estimates are not subscription billing. No extended context or output cap is
-  sent.
+- The managed `omp` executable in Home Manager's profile replaces the
+  Homebrew command in the configured Zsh `PATH`. It launches the existing
+  `/opt/homebrew/bin/omp` with `~/.config/underclass/omp-pool.yml`.
+- The launcher checks Underclass and its proxy key before starting; if the
+  service is unavailable, `omp` exits instead of falling back to direct
+  inference. It rejects `--model`, `--provider`, and `--config` overrides.
+- Every OMP model role, including `judge`, resolves through Underclass, and
+  model fallback is disabled. This does not prevent a user from bypassing the
+  managed command by invoking the Homebrew executable by absolute path or
+  otherwise changing OMP's configuration. Network-level egress enforcement
+  would be required to guarantee that broader boundary.
+- `codex-pool` remains a separate launcher for Codex.
 
-Open `http://127.0.0.1:8080/`. Invoke `underclass-ui-token` only when ready to
+Open `http://127.0.0.1:43871/`. Invoke `underclass-ui-token` only when ready to
 paste into that local page, then replace clipboard contents. Authorize each
 distinct ChatGPT/Codex identity interactively; do not copy existing clients'
 OAuth tokens. Banked reset credits are **manual**; ordinary quota-window
 recovery remains automatic.
+
+Port 43871 was unused on this Mac when selected and is below its ephemeral
+range (49152–65535), avoiding common development ports and outbound-port
+allocation. No fixed port can guarantee freedom from future collisions.
+The service bind, launcher checks, Codex URL, and OMP provider URL share one
+Nix origin. After a config-only port change, restart the launch agent with
+the command below; its executable/plist need not otherwise change.
 
 The login-discovered launch agent is `gui/$(id -u)/org.nix-community.home.underclass`:
 
