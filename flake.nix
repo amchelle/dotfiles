@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # Recent unstable with a cached Apple Silicon Atuin; avoid a local Rust build.
+    atuin-nixpkgs.url = "github:NixOS/nixpkgs/8aa2baf1af6ca99131c979cbdadad7a08e2ca69a";
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager/master";

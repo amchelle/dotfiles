@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "atuin-nixpkgs": {
+      "locked": {
+        "lastModified": 1791689350,
+        "narHash": "sha256-JwMUDZNi8oz5KUY23zGWeBz9XeMN07ILMnUES5d55yk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8aa2baf1af6ca99131c979cbdadad7a08e2ca69a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8aa2baf1af6ca99131c979cbdadad7a08e2ca69a",
+        "type": "github"
+      }
+    },
     "cachix": {
       "inputs": {
         "devenv": [
@@ -336,6 +352,7 @@
     },
     "root": {
       "inputs": {
+        "atuin-nixpkgs": "atuin-nixpkgs",
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
