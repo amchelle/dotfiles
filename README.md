@@ -84,6 +84,33 @@ command.
 and opens the selected file and line in Helix. It is loaded as a Zsh autoloaded
 function; ripgrep and bat are included with the shell packages.
 
+## Helix
+
+`modules/helix.nix` vendors EricCrosson's Helix configuration
+(`EricCrosson/dotfiles@d87b3a5`, `home/editor/helix`): his keymaps
+(Ctrl-h/j/k/l view jumps; `Space` `l/L/o/t/T` for reload, reload-all, reflow,
+inlay-hint toggle, and tree-sitter subtree), editor options (`idle-timeout = 0`,
+block/bar/underline cursor shapes, hidden files in the picker, inline
+diagnostics on the cursor and other lines, inlay hints off), and languages
+(Markdown with no language server; Python through `pyright`). The default theme
+is `wolf-alabaster-light-bg`.
+
+Helix uses the theme set he ships: `wolf-alabaster-light`,
+`wolf-alabaster-light-bg`, `kitty-alabaster-dark`, and `kitty-alabaster-dark-bg`.
+The two `wolf-alabaster-*` themes are vendored from Helix master (`ba40e547`) as
+raw TOML under `modules/helix/themes/`, because nixpkgs' Helix 25.07.1 does not
+bundle them; drop the vendored copies once `pkgs.helix` ships them. His language
+servers (bash, Dockerfile, gopls, hadolint, jsonnet, ltex, nil, pyright, ruff,
+shellcheck, taplo, TypeScript, and the vscode-langservers set) are installed
+alongside.
+
+Upstream also drives Helix theme switching from macOS appearance through a
+`helix-theme-sync` service on top of an `appearance-sync` launchd harness. That
+harness is disabled in EricCrosson's own profile (`appearance-sync.enable =
+false`), so it is not vendored here: Helix keeps the single configured theme.
+External reference: [EricCrosson's Helix
+module](https://github.com/EricCrosson/dotfiles/blob/d87b3a5c875d0451e112ade876e333c03ba2c0d5/home/editor/helix/default.nix).
+
 
 The main nixpkgs input tracks current `nixpkgs-unstable`. Atuin alone uses
 the October 11 unstable revision `8aa2baf1`, whose Apple Silicon binary is

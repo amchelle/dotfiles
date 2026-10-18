@@ -17,7 +17,8 @@ in
   imports = [ inputs.nix-index-database.homeModules.nix-index ];
   programs.nix-index-database.comma.enable = true;
 
-  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf pkgs.eza pkgs.ripgrep pkgs.bat ];
+  # Helix is installed and configured by modules/helix.nix.
+  home.packages = [ pkgs.fd pkgs.fzf pkgs.eza pkgs.ripgrep pkgs.bat ];
   home.sessionVariables = {
     EDITOR = "hx";
     FZF_ALT_C_COMMAND = "fd --type d";
