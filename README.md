@@ -79,6 +79,10 @@ The esc-zsh smart-cd hook also runs synchronously on shell startup and after
 each directory change: it prints an `eza` listing, then `git status` when inside
 a repository. The package provides `eza` for the plugin's default listing
 command.
+`rh` searches recursively with `rg`, presents matches in `fzf` with a `bat` preview,
+and opens the selected file and line in Helix. It is loaded as a Zsh autoloaded
+function; ripgrep and bat are included with the shell packages.
+
 
 The main nixpkgs input tracks current `nixpkgs-unstable`. Atuin alone uses
 the October 11 unstable revision `8aa2baf1`, whose Apple Silicon binary is

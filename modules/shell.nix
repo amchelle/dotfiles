@@ -6,12 +6,18 @@ let
     rev = "57051138141179c293dcaef2da659e42ad4f9eeb";
     sha256 = "sha256-TgWwvJqQvIjRXpYuSVZ4ZqJCqLF7a5IIqLPzyYNWaTs=";
   };
+  rh = pkgs.fetchFromGitHub {
+    owner = "esc-zsh";
+    repo = "rh";
+    rev = "2e7ba9f0e71fc7090c22e7cf1872592361296d48";
+    sha256 = "sha256-vWHbPnGPNQT3VytHzy1vS63C0vl26x+5lYIumDC2ei4=";
+  };
 in
 {
   imports = [ inputs.nix-index-database.homeModules.nix-index ];
   programs.nix-index-database.comma.enable = true;
 
-  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf pkgs.eza ];
+  home.packages = [ pkgs.helix pkgs.fd pkgs.fzf pkgs.eza pkgs.ripgrep pkgs.bat ];
   home.sessionVariables = {
     EDITOR = "hx";
     FZF_ALT_C_COMMAND = "fd --type d";
@@ -42,6 +48,8 @@ in
     initContent = ''
       # Show directory contents and Git status on directory changes.
       source ${smartCd}/smart-cd.zsh
+      fpath+=("${rh}")
+      autoload -Uz rh
       ${builtins.readFile ./fzf-cd-widget.zsh}
       source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
       ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
