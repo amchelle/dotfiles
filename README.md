@@ -17,7 +17,6 @@ nix build --no-link '.#darwinConfigurations.Amchelles-iMac.system'
 sudo -kn /run/current-system/sw/bin/darwin-rebuild switch --flake .#Amchelles-iMac
 bash tests/underclass-smoke.sh
 bash tests/activation-smoke.sh
-bash tests/omp-routing-smoke.sh
 python3 tests/preflight-smoke.py
 ```
 
@@ -104,23 +103,16 @@ Underclass (127.0.0.1:43871) → model`. Commands, model roles, subscription
 accounts, proxy key, and Underclass's admin UI stay the same. Restart existing
 OMP sessions after activation: an already-running client may retain its old URL.
 
-- The managed `omp` executable in Home Manager's profile replaces the
-  Homebrew command in the configured Zsh `PATH`. It launches the existing
-  `/opt/homebrew/bin/omp` with `~/.config/underclass/omp-pool.yml`.
-  The launcher checks both services and the existing proxy key before starting;
-  if either service is unavailable, `omp` exits with no direct-account or
-  uninspected fallback. `--model smol` is the sole permitted model override and maps to
-  the configured Underclass smol role; all other model overrides and all
-  `--provider`/`--config` overrides are rejected.
-
-  Model fallback is disabled.
-- Run `bash tests/omp-routing-smoke.sh` after activation to verify that
-  `--model smol` routes to the configured role and that provider/config and
-  other model overrides remain rejected. This controls the normal managed
-  `omp` command, not explicit invocation of `/opt/homebrew/bin/omp`, alternate
-  OMP installations, or other network clients. Enforcing a network-wide
-  no-direct-OpenAI rule would require separate egress controls; this
-  configuration does not claim it.
+- OMP is **not** wrapped or shadowed. The `underclass` provider definition in
+  `~/.omp/agent/models.yml` is the only OMP-specific integration: it points at
+  Preflight with the proxy key read from the pool DB at request time. `omp`
+  resolves from `PATH` as installed by Homebrew.
+- Select Underclass yourself through `/models` in OMP, or assign it to model
+  roles under `modelRoles` in `~/.omp/agent/config.yml`. This flake installs no
+  model roles, no forced launch model, and no fallback chains, so Underclass is
+  used only when you select it or list it in a chain you wrote. Overrides such
+  as `--provider`, `--config`, and arbitrary `--model` values are ordinary OMP
+  behavior, not rejected.
 - `codex-pool` remains a separate launcher for Codex, using the same inspected URL.
 
 Open `http://127.0.0.1:43871/`. Invoke `underclass-ui-token` only when ready to
