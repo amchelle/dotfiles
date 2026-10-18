@@ -12,6 +12,10 @@
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
     underclass.url = "github:ghuntley/underclass/469aff4c797e14052285d64d9acfa4b2fc0c73a3";
+    preflight-src = {
+      url = "github:ghuntley/preflight/eb13fc015686202d15c7ed57faa3d975482bcc32";
+      flake = false;
+    };
   };
 
   outputs = inputs@{ nixpkgs, nix-darwin, home-manager, underclass, ... }:
@@ -35,6 +39,7 @@
       };
       packages.${system} = {
         underclass = underclass.packages.${system}.underclass;
+        preflight = pkgs.callPackage ./packages/preflight.nix { src = inputs.preflight-src; };
         darwin-rebuild = nix-darwin.packages.${system}.darwin-rebuild;
       };
       devShells.${system}.default = pkgs.mkShell {

@@ -11,12 +11,14 @@ Work from this directory, inside its development shell:
 
 ```sh
 nix develop
-nix build --no-link .#underclass
+nix build --no-link .#underclass .#preflight
 nix flake check
 nix build --no-link '.#darwinConfigurations.Amchelles-iMac.system'
 sudo -kn /run/current-system/sw/bin/darwin-rebuild switch --flake .#Amchelles-iMac
 bash tests/underclass-smoke.sh
 bash tests/activation-smoke.sh
+bash tests/omp-routing-smoke.sh
+python3 tests/preflight-smoke.py
 ```
 
 Direnv uses Home Manager's `programs.direnv.silent` to suppress routine
@@ -95,14 +97,19 @@ inference. Its optional `UNDERCLASS_ORIGIN` defaults to `http://127.0.0.1:43871`
 The upstream Underclass package disables Rust checks; building is not a routing
 test.
 
-## OMP through Underclass
+## OMP through Preflight and Underclass
+
+Managed inference follows `OMP / codex-pool → Preflight (127.0.0.1:46783) →
+Underclass (127.0.0.1:43871) → model`. Commands, model roles, subscription
+accounts, proxy key, and Underclass's admin UI stay the same. Restart existing
+OMP sessions after activation: an already-running client may retain its old URL.
 
 - The managed `omp` executable in Home Manager's profile replaces the
   Homebrew command in the configured Zsh `PATH`. It launches the existing
   `/opt/homebrew/bin/omp` with `~/.config/underclass/omp-pool.yml`.
-  The launcher checks Underclass and its proxy key before starting; if the
-  service is unavailable, `omp` exits instead of falling back to direct
-  inference. `--model smol` is the sole permitted model override and maps to
+  The launcher checks both services and the existing proxy key before starting;
+  if either service is unavailable, `omp` exits with no direct-account or
+  uninspected fallback. `--model smol` is the sole permitted model override and maps to
   the configured Underclass smol role; all other model overrides and all
   `--provider`/`--config` overrides are rejected.
 
@@ -114,7 +121,7 @@ test.
   OMP installations, or other network clients. Enforcing a network-wide
   no-direct-OpenAI rule would require separate egress controls; this
   configuration does not claim it.
-- `codex-pool` remains a separate launcher for Codex.
+- `codex-pool` remains a separate launcher for Codex, using the same inspected URL.
 
 Open `http://127.0.0.1:43871/`. Invoke `underclass-ui-token` only when ready to
 paste into that local page, then replace clipboard contents. Authorize each
@@ -122,18 +129,20 @@ distinct ChatGPT/Codex identity interactively; do not copy existing clients'
 OAuth tokens. Banked reset credits are **manual**; ordinary quota-window
 recovery remains automatic.
 
-Port 43871 was unused on this Mac when selected and is below its ephemeral
-range (49152–65535), avoiding common development ports and outbound-port
-allocation. No fixed port can guarantee freedom from future collisions.
-The service bind, launcher checks, Codex URL, and OMP provider URL share one
-Nix origin. After a config-only port change, restart the launch agent with
-the command below; its executable/plist need not otherwise change.
+Ports 43871 (Underclass/admin) and 46783 (Preflight/managed clients) were unused
+when selected and are below this Mac's ephemeral range (49152–65535), avoiding
+common development ports and outbound-port allocation. Neither service uses
+8080. No fixed port can guarantee freedom from future collisions. Each origin
+is defined once in `modules/underclass.nix`. After a config-only port change,
+restart both launch agents; their executable/plist need not otherwise change.
 
 The login-discovered launch agent is `gui/$(id -u)/org.nix-community.home.underclass`:
 
 ```sh
 launchctl print "gui/$(id -u)/org.nix-community.home.underclass"
 launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.underclass"
+launchctl print "gui/$(id -u)/org.nix-community.home.preflight"
+launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.preflight"
 utop
 ```
 
@@ -151,6 +160,50 @@ than explicit user-domain registration, whose reboot persistence is affected by
 https://github.com/nix-community/home-manager/issues/9656.
 Reboot/login autostart is the intended lifecycle, not a demonstrated acceptance
 result; availability before login is not provided.
+
+### Secret protection and its limits
+
+[Preflight](https://github.com/ghuntley/preflight) is pinned at
+`eb13fc015686202d15c7ed57faa3d975482bcc32`, including its vendored detection
+rules. The native Darwin package is local because upstream's flake packages
+Linux only. Upgrade the source pin/lock to take new upstream rules; there is no
+unreviewed background rule updater on this computer.
+
+- `~/.config/preflight/config.toml` selects **redact**, not advisory: recognized
+  credentials in request text/tool results become `[REDACTED:rule-id]`.
+  Supported attachments are inspected locally and sanitized where safe. Unsafe
+  replacements are blocked (409); acquisition/extraction failures fail closed
+  (422). Clean request bodies and response streams are preserved.
+- Images/PDFs use native Poppler, Tesseract, QPDF, ExifTool, and ZBar. The worker
+  always runs inside a deny-by-default macOS `sandbox-exec` profile: no network,
+  no private home-file reads, and writes confined to its job directory. TOML's
+  `sandbox = false` disables upstream's **Linux Bubblewrap launcher**, not this
+  packaged native sandbox. Failure of native tools prevents readiness.
+  Darwin rejects upstream's finite address-space limit, so the native package
+  omits that Linux-only limit; CPU, file-size, descriptor, and inspection limits
+  remain. This is not a hard memory cap or a Linux PID namespace.
+- Preflight requires the existing Underclass proxy key and passes it through;
+  credentials are read from the pool DB at startup, never embedded in Nix.
+  After rotating that key, restart Preflight. No new login or client key setup.
+- Cache/artifacts live in `~/.cache/preflight`, control socket in
+  `~/.local/share/preflight/control.sock`, logs in `~/Library/Logs/preflight`.
+  Directories are 0700 and the service uses umask 077. Logs are truncated on
+  restart and record findings/IDs, not prompts or matched secrets. Treat cached
+  artifacts as sensitive. `preflight cache status` and `preflight cache purge`
+  use `PREFLIGHT_CONTROL` set by Home Manager (new shell after activation).
+- Detection is not a guarantee that arbitrary passwords, novel formats, or all
+  OCR-visible secrets are recognized. Unsupported attachments can stop a request
+  instead of silently passing it. This protects the managed inference path, not
+  browser/tool traffic, other applications, explicit direct Underclass calls,
+  or clients that bypass these launchers. Underclass's admin URL stays direct.
+
+`python3 tests/preflight-smoke.py` runs the actual packaged proxy against a
+recording loopback upstream, with synthetic credentials and no provider calls.
+Use the Nix development shell and installed `preflight`, or set `PREFLIGHT_BIN`
+to a built package's `bin/preflight`. It covers native sandbox boundaries,
+authentication, clean Responses/Chat bytes and SSE, nested text redaction,
+PNG/PDF inspection and metadata sanitization, attachment rejection, model
+discovery, and failure when upstream is down.
 
 ## Preservation and rollback
 

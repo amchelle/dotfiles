@@ -370,6 +370,23 @@
         "type": "github"
       }
     },
+    "preflight-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789917366,
+        "narHash": "sha256-SUkvr26uwv+VjA8xUbAShedRHoCOoBekjcp4wECu9MI=",
+        "owner": "ghuntley",
+        "repo": "preflight",
+        "rev": "eb13fc015686202d15c7ed57faa3d975482bcc32",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ghuntley",
+        "repo": "preflight",
+        "rev": "eb13fc015686202d15c7ed57faa3d975482bcc32",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "atuin-nixpkgs": "atuin-nixpkgs",
@@ -377,6 +394,7 @@
         "nix-darwin": "nix-darwin",
         "nix-index-database": "nix-index-database",
         "nixpkgs": "nixpkgs",
+        "preflight-src": "preflight-src",
         "underclass": "underclass"
       }
     },

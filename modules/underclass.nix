@@ -1,6 +1,7 @@
 { config, inputs, pkgs, ... }:
 let
   underclass = inputs.underclass.packages.aarch64-darwin.underclass;
+  preflight = pkgs.callPackage ../packages/preflight.nix { src = inputs.preflight-src; };
   home = config.home.homeDirectory;
   dataDir = "${home}/.local/share/underclass";
   logDir = "${home}/Library/Logs/underclass";
@@ -8,11 +9,15 @@ let
   # Unused locally and below this Mac's 49152–65535 ephemeral range.
   bind = "127.0.0.1:43871";
   origin = "http://${bind}";
-  service = pkgs.writeShellScript "underclass-service" ''
-    set -euo pipefail
-    umask 077
+  preflightBind = "127.0.0.1:46783";
+  inspectedOrigin = "http://${preflightBind}";
+  preflightData = "${home}/.local/share/preflight";
+  preflightCache = "${home}/.cache/preflight";
+  preflightLogs = "${home}/Library/Logs/preflight";
+  # Both services create private runtime paths before opening data or logs.
+  privatePaths = ''
     uid=$(${pkgs.coreutils}/bin/id -u)
-    fail() { printf 'Unsafe Underclass path: %s\n' "$1" >&2; exit 1; }
+    fail() { printf 'Unsafe service path: %s\n' "$1" >&2; exit 1; }
     private_directory() {
       local path=$1
       if [[ -e $path || -L $path ]]; then
@@ -31,6 +36,11 @@ let
         ${pkgs.coreutils}/bin/chmod 600 -- "$path"
       fi
     }
+  '';
+  service = pkgs.writeShellScript "underclass-service" ''
+    set -euo pipefail
+    umask 077
+    ${privatePaths}
     private_directory '${dataDir}'
     private_directory '${logDir}'
     for file in '${db}' '${db}-wal' '${db}-shm' \
@@ -64,6 +74,27 @@ let
       }
     }
   '';
+  preflightService = pkgs.writeShellScript "preflight-service" ''
+    set -euo pipefail
+    umask 077
+    ${privatePaths}
+    private_directory '${preflightData}'
+    private_directory '${preflightCache}'
+    private_directory '${preflightLogs}'
+    for file in '${preflightLogs}/stdout.log' '${preflightLogs}/stderr.log'; do
+      private_file "$file"
+    done
+    ${readKey}
+    read_key proxy_key
+    export HOME='${home}'
+    export PREFLIGHT_CLIENT_KEY="$value"
+    unset value PREFLIGHT_UPSTREAM_KEY PREFLIGHT_FILE_API_KEY PREFLIGHT_WORKER PREFLIGHT_WORKER_PATH PREFLIGHT_TOOLCHAIN_ID
+    export PREFLIGHT_CONTROL='${preflightData}/control.sock'
+    export NO_PROXY=127.0.0.1,localhost
+    export RUST_LOG=info
+    exec > '${preflightLogs}/stdout.log' 2> '${preflightLogs}/stderr.log'
+    exec ${preflight}/bin/preflight serve --config '${home}/.config/preflight/config.toml'
+  '';
   uiToken = pkgs.writeShellScriptBin "underclass-ui-token" ''
     set -euo pipefail
     ${readKey}
@@ -81,6 +112,11 @@ let
       printf 'Underclass unavailable at ${origin}; start or repair the user service. No direct-account fallback.\n' >&2
       exit 1
     fi
+    if ! ${pkgs.curl}/bin/curl --noproxy '*' --fail --silent --output /dev/null \
+        --connect-timeout 2 --max-time 3 '${inspectedOrigin}/readyz'; then
+      printf 'Preflight unavailable at ${inspectedOrigin}; start or repair the user service. No uninspected fallback.\n' >&2
+      exit 1
+    fi
   '';
   codexPool = pkgs.writeShellScriptBin "codex-pool" ''
     set -euo pipefail
@@ -94,7 +130,7 @@ let
     exec /opt/homebrew/bin/codex \
       -c 'model_provider="underclass"' \
       -c 'model_providers.underclass.name="Underclass"' \
-      -c 'model_providers.underclass.base_url="${origin}/v1"' \
+      -c 'model_providers.underclass.base_url="${inspectedOrigin}/v1"' \
       -c 'model_providers.underclass.env_key="UNDERCLASS_PROXY_KEY"' \
       -c 'model_providers.underclass.wire_api="responses"' \
       -c 'model_providers.underclass.requires_openai_auth=false' \
@@ -141,7 +177,7 @@ let
   '';
   ompModels = {
     providers.underclass = {
-      baseUrl = "${origin}/v1";
+      baseUrl = "${inspectedOrigin}/v1";
       api = "openai-responses";
       auth = "apiKey";
       authHeader = true;
@@ -163,11 +199,34 @@ let
     };
   };
 in {
-  home.packages = [ underclass uiToken codexPool omp ];
+  home.packages = [ underclass preflight uiToken codexPool omp ];
   xdg.configFile."underclass/config.toml".text = ''
     bind = "${bind}"
     auto_codex_resets = false
   '';
+  xdg.configFile."preflight/config.toml".text = ''
+    bind = "${preflightBind}"
+    upstream = "${origin}"
+    mode = "redact"
+    # Upstream's sandbox switch selects Linux Bubblewrap. Our packaged worker
+    # always uses macOS sandbox-exec instead, including startup checks.
+    sandbox = false
+    cache_dir = "${preflightCache}"
+    control_socket = "${preflightData}/control.sock"
+  '';
+  home.sessionVariables.PREFLIGHT_CONTROL = "${preflightData}/control.sock";
+  launchd.agents.preflight = {
+    enable = true;
+    domain = "gui";
+    config = {
+      ProgramArguments = [ "${preflightService}" ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ProcessType = "Background";
+      ThrottleInterval = 10;
+      Umask = 63;
+    };
+  };
   launchd.agents.underclass = {
     enable = true;
     # ~/Library/LaunchAgents is rediscovered at graphical login after reboot.

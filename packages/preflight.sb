@@ -1,0 +1,28 @@
+(version 1)
+
+(deny default)
+
+; The worker and every native parser/toolchain executable are immutable Nix paths.
+(allow process-fork)
+(allow process-exec (subpath "/nix/store"))
+; dyld queries these before it can load any Nix executable.
+(allow sysctl-read)
+(allow file-read* (literal "/") (literal "/nix"))
+
+; Only read-only system/Nix runtime inputs and the per-job tree are visible.
+(allow file-read* (subpath "/nix/store"))
+(allow file-read* (subpath "/System"))
+(allow file-read* (subpath "/usr/lib"))
+(allow file-read* (subpath "/usr/bin"))
+(allow file-read* (subpath "/Library/Apple/System/Library"))
+(allow file-read* (literal "/dev/null"))
+; Native tool subprocesses open their discarded stderr here.
+(allow file-write-data (literal "/dev/null"))
+(allow file-read* (literal "/dev/zero"))
+(allow file-read* (literal "/dev/random"))
+(allow file-read* (literal "/dev/urandom"))
+(allow file-read-metadata (subpath "/private"))
+(allow file-read* (subpath (param "JOBDIR")))
+(allow file-write* (subpath (param "JOBDIR")))
+
+; Do not grant network, IPC, host-home, or general temporary-directory access.
